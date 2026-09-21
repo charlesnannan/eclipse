@@ -1,0 +1,14 @@
+{
+  "name": "eclipse",
+  "type": "module",
+  "scripts": {
+    "build": "rolldown -c"
+  },
+  "peerDependencies": {
+    "lit": "^3.3.3"
+  },
+  "devDependencies": {
+    "lit": "^3.3.3",
+    "rolldown": "^1.2.11"
+  }
+}

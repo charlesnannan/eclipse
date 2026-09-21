@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="foo theme-6 bar">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="color-scheme" content="dark light" />
+        <title>Eclipse | Testing</title>
+        <script type="importmap">
+            {
+                "imports": {
+                    "lit": "../node_modules/lit/index.js",
+                    "lit/decorators.js": "../node_modules/lit/decorators.js",
+                    "lit-element/": "../node_modules/lit-element/",
+                    "lit-html": "../node_modules/lit-html/lit-html.js",
+                    "lit-html/": "../node_modules/lit-html/",
+                    "@lit/reactive-element": "../node_modules/@lit/reactive-element/reactive-element.js",
+                    "@lit/reactive-element/": "../node_modules/@lit/reactive-element/"
+                }
+            }
+        </script>
+        <script type="module" src="../dist/eclipse.js"></script>
+    </head>
+    <body>
+        <p>
+            Default themes
+        </p>
+
+        <ce-eclipse disable-preview></ce-eclipse>
+
+        <p>
+            Custom themes
+        </p>
+
+<!--        <ce-eclipse themes='["Dawn","Dusk"]'></ce-eclipse>-->
+    </body>
+</html>

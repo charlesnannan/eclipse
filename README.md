@@ -7,6 +7,7 @@ Lit component to preview and apply color schemes
 The component displays a native `select` element. When selecting a value, it applies a corresponding class name on the root element.
 
 By default, hovering or focusing values also applies a temporary class name for quick previews.
+Leaving the picker or pressing Escape restores the last selected theme. Selecting a value keeps it applied.
 
 # Installation
 
@@ -31,14 +32,14 @@ The names displayed in the list.
 
 Examples:
 ```html
-<eclipse themes='["Black","Dark","Light","White"]'></eclipse>
-<eclipse themes='["Dawn","Dusk"]'></eclipse>
+<ce-eclipse themes='["Black","Dark","Light","White"]'></ce-eclipse>
+<ce-eclipse themes='["Dawn","Dusk"]'></ce-eclipse>
 ```
 
 ### `disable-preview`
 
 * Type: `boolean  `
-* Default: `true`
+* Default: `false`
 
 Prevents the component from updating the CSS class applied on the root element when themes are hovered or focused.
 

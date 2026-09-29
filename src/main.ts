@@ -33,13 +33,11 @@ class Eclipse extends LitElement
     @query('#theme-list', true)
     private themeList: HTMLSelectElement;
 
-    /**
-     * The CSS class applied to the `<html>` element.
-     * Only one class at a time can be applied by the component.
-     */
-    currentCssClass: string = '';
+    /** The selected theme, which a preview must restore when it ends. */
+    private committedCssClass: string = '';
 
-    // TODO: probably need another property. One for the temporary class, one for the permanent one.
+    /** The theme class currently applied to the `<html>` element. */
+    private appliedCssClass: string = '';
 
     /**
      * Preselect the theme based on the existing classes applied to the `<html>` element.
@@ -53,19 +51,17 @@ class Eclipse extends LitElement
         for (const cssClass of cssClasses) {
             // Look for a theme-derived class name.
             if (slugs.includes(cssClass)) {
-                this.currentCssClass = cssClass;
+                this.committedCssClass = cssClass;
+                this.appliedCssClass = cssClass;
                 this.themeList.selectedIndex = slugs.indexOf(cssClass);
                 break;
             }
             // Look for a language-agnostic class name.
-            if (cssClass.startsWith('theme-')) {
-                const index = Number(cssClass.split('-')[1]);
-
-                if (isNaN(index) || index > this.themes.length) {
-                    continue;
-                }
-
-                this.currentCssClass = cssClass;
+            const match = /^theme-([1-9]\d*)$/.exec(cssClass);
+            if (match && Number(match[1]) <= this.themes.length) {
+                const index = Number(match[1]);
+                this.committedCssClass = cssClass;
+                this.appliedCssClass = cssClass;
                 this.themeList.selectedIndex = index - 1; // Zero-based index.
                 break;
             }
@@ -77,8 +73,10 @@ class Eclipse extends LitElement
         return html`
             <select
                 id="theme-list"
-                @change="${this.updateCssClass}"
+                @change="${this.commitSelection}"
                 @mouseleave="${this.restoreCssClass}"
+                @focusout="${this.restoreOnFocusOut}"
+                @keydown="${this.restoreOnEscape}"
             >
                 <button>
                     <selectedcontent></selectedcontent>
@@ -87,8 +85,8 @@ class Eclipse extends LitElement
                 ${this.themes.map((theme) =>
                     html`<option
                         value=${this.slugify(theme)}
-                        @mouseover="${this.disablePreview ? null : this.updateCssClass}"
-                        @focus="${this.disablePreview ? null : this.updateCssClass}"
+                        @mouseover="${this.disablePreview ? null : this.previewCssClass}"
+                        @focus="${this.disablePreview ? null : this.previewCssClass}"
                     >
                         ${theme}
                     </option>`
@@ -97,28 +95,73 @@ class Eclipse extends LitElement
         `;
     }
 
-    private updateCssClass(event: MouseEvent): void
+    private classNameForOption(option: HTMLOptionElement): string
     {
-        const option = event.currentTarget as HTMLOptionElement;
-
-        const className = this.naming === Naming.Derived
+        return this.naming === Naming.Derived
             ? option.value
             : `theme-${option.index + 1}`;
-
-        const classList = document.documentElement.classList;
-
-        classList.remove(this.currentCssClass);
-        classList.add(className);
-
-        this.currentCssClass = className;
     }
 
-    /**
-     * TODO: must restore the CSS class name added during the last "change" event.
-     */
-    private restoreCssClass(event: MouseEvent): void
+    private applyCssClass(className: string): void
     {
-        console.log('plop');
+        if (this.appliedCssClass === className) {
+            return;
+        }
+
+        const classList = document.documentElement.classList;
+        if (this.appliedCssClass) {
+            classList.remove(this.appliedCssClass);
+        }
+        if (className) {
+            classList.add(className);
+        }
+        this.appliedCssClass = className;
+    }
+
+    private commitSelection(event: Event): void
+    {
+        // `change` is handled by the select, not by an option.
+        const select = event.currentTarget as HTMLSelectElement;
+        const option = select.selectedOptions[0];
+        if (!option) {
+            return;
+        }
+
+        this.committedCssClass = this.classNameForOption(option);
+        this.applyCssClass(this.committedCssClass);
+    }
+
+    private previewCssClass(event: Event): void
+    {
+        const option = event.currentTarget as HTMLOptionElement;
+        this.applyCssClass(this.classNameForOption(option));
+    }
+
+    private restoreCssClass(): void
+    {
+        this.applyCssClass(this.committedCssClass);
+    }
+
+    disconnectedCallback(): void
+    {
+        super.disconnectedCallback();
+        this.restoreCssClass();
+    }
+
+    private restoreOnFocusOut(event: FocusEvent): void
+    {
+        // Moving between options is still part of the same preview session.
+        if (event.relatedTarget instanceof HTMLOptionElement && this.themeList.contains(event.relatedTarget)) {
+            return;
+        }
+        this.restoreCssClass();
+    }
+
+    private restoreOnEscape(event: KeyboardEvent): void
+    {
+        if (event.key === 'Escape') {
+            this.restoreCssClass();
+        }
     }
 
     /**

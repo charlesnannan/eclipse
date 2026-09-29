@@ -25,5 +25,21 @@
         </p>
 
         <ce-eclipse></ce-eclipse>
+        <script>
+            // Keep one component per page because each instance controls <html>.
+            // Query parameters let this page serve several browser test scenarios.
+            const params = new URLSearchParams(location.search);
+            const eclipse = document.querySelector('ce-eclipse');
+
+            if (params.get('naming') === 'agnostic') {
+                eclipse.setAttribute('naming', 'agnostic');
+            }
+            if (params.has('disable-preview')) {
+                eclipse.setAttribute('disable-preview', '');
+            }
+            if (params.get('initial') === 'none') {
+                document.documentElement.className = 'foo bar';
+            }
+        </script>
     </body>
 </html>

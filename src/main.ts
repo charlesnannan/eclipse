@@ -139,7 +139,11 @@ class Eclipse extends LitElement
 
     render()
     {
+        // The label and select share a shadow tree so `for` can associate them.
+        // A default slot lets the consumer supply the label's text and markup;
+        // its rendered content also supplies the select's accessible name.
         return html`
+            <label for="theme-list"><slot></slot></label>
             <select
                 id="theme-list"
                 @change="${this.commitSelection}"

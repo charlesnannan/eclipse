@@ -27,6 +27,26 @@ The initial class must match a theme's `className`. If JavaScript determines the
 
 Eclipse does not apply a default theme automatically. If no recognized theme class is present, the picker displays its first option, and the document's classes stay unchanged until the user previews or selects a theme.
 
+## Label
+
+Provide a nonempty label as the component's child content:
+
+```html
+<ce-eclipse>
+  Theme
+</ce-eclipse>
+```
+
+Eclipse associates this content with the picker, giving it an accessible name and allowing users to click the label to focus it. You choose the wording and language; Eclipse supplies no default label.
+
+You can also provide markup and style it with your own CSS:
+
+```html
+<ce-eclipse>
+  <span class="theme-label">Theme</span>
+</ce-eclipse>
+```
+
 # Installation
 
 TODO
@@ -79,6 +99,8 @@ For custom themes, use a JSON array in the attribute:
 * Default: `false`
 
 Prevents the component from updating the CSS class applied on the root element when themes are hovered or focused.
+
+Theme previews rely on the [customizable select](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select), which lets individual options receive hover and focus events.
 
 You can toggle this preference at any time. Disabling preview immediately restores the selected theme if a preview is active; selecting a theme still works.
 

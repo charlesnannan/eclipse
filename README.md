@@ -4,7 +4,7 @@ Lit component to preview and apply color schemes
 
 ---
 
-The component displays a native `select` element. When selecting a value, it applies a corresponding class name on the root element.
+Eclipse displays a native `select` element. Selecting a theme applies its corresponding CSS class to the document's `<html>` element.
 
 By default, hovering or focusing values also applies a temporary class name for quick previews.
 Leaving the picker or pressing Escape restores the last selected theme. Selecting a value keeps it applied.
@@ -47,17 +47,71 @@ You can also provide markup and style it with your own CSS:
 </ce-eclipse>
 ```
 
-# Installation
+## Installation
 
-TODO
+From a checkout of this repository, install the dependencies and build Eclipse:
 
-(The consumer needs an importmap if he does not use the pre-bundled version and does not use a bundler.)
+```sh
+npm ci
+npm run build
+```
 
-TODO: need to publish .d.ts typings in the npm package. (How?)
+The build produces `dist/eclipse.js`, an ES module that registers `<ce-eclipse>` when loaded. Eclipse's code is bundled with Rolldown; Lit remains a separate dependency so multiple components can share it.
+
+### With a bundler
+
+Install Lit in your application:
+
+```sh
+npm install lit@^3.3.3
+```
+
+Copy the built `eclipse.js` into your application and import it from your JavaScript entry point. For example, if you place it in a `components` directory beside that entry point:
+
+```js
+import './components/eclipse.js';
+```
+
+Your bundler resolves Eclipse's Lit imports from the installed package. You can then use `<ce-eclipse>` in your HTML.
+
+### Without a bundler
+
+Load `eclipse.js` with a module script. An import map must resolve its `lit` and `lit/decorators.js` imports, along with Lit's own dependencies.
+
+For an HTML page at this repository's root, the following uses the packages installed by `npm ci`. Place the import map before the module script:
+
+```html
+<script type="importmap">
+  {
+    "imports": {
+      "lit": "./node_modules/lit/index.js",
+      "lit/decorators.js": "./node_modules/lit/decorators.js",
+      "lit-element/": "./node_modules/lit-element/",
+      "lit-html": "./node_modules/lit-html/lit-html.js",
+      "lit-html/": "./node_modules/lit-html/",
+      "@lit/reactive-element": "./node_modules/@lit/reactive-element/reactive-element.js",
+      "@lit/reactive-element/": "./node_modules/@lit/reactive-element/"
+    }
+  }
+</script>
+<script type="module" src="./dist/eclipse.js"></script>
+```
+
+Serve the page over HTTP. For another project or deployment, adjust the URLs to wherever you serve these modules. Import maps resolve the module imports; you do not need a separate script to load Lit first.
+
+The build currently produces JavaScript only; TypeScript declaration files are not yet generated.
 
 ## Demo
 
+A hosted example is planned for GitHub Pages. For now, use the [local playground](tests/page.html).
 
+After building Eclipse, serve the repository with an HTTP server. For example, if Python is installed, run this from the repository's root:
+
+```sh
+python -m http.server 8000 --bind 127.0.0.1
+```
+
+Then open [the playground](http://127.0.0.1:8000/tests/page.html) in your browser.
 
 ## Attributes
 
@@ -65,7 +119,7 @@ TODO: need to publish .d.ts typings in the npm package. (How?)
 
 * Type: `Array<{label: string, className: string}>`
 
-The themes in display order. `label` is the text shown in the picker; `className` is the exact CSS class applied to `<html>`. You can translate labels or reorder themes while keeping the same class names.
+The themes in display order. `label` is the text shown in the picker; `className` is the exact CSS class applied to the document's `<html>` element. You can translate labels or reorder themes while keeping the same class names.
 
 Configure the list before Eclipse's first render. Changes to `themes` after initialization do not alter the picker, even if you remove and reconnect it. Create a new instance to use a different list.
 
@@ -98,13 +152,23 @@ For custom themes, use a JSON array in the attribute:
 * Type: `boolean`
 * Default: `false`
 
-Prevents the component from updating the CSS class applied on the root element when themes are hovered or focused.
+Prevents previews from changing the CSS class applied to the document's `<html>` element when themes are hovered or focused.
 
 Theme previews rely on the [customizable select](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select), which lets individual options receive hover and focus events.
 
 You can toggle this preference at any time. Disabling preview immediately restores the selected theme if a preview is active; selecting a theme still works.
 
-The presence of the attribute disables preview. Remove it to enable preview again:
+`disable-preview` is a Boolean presence attribute: its presence disables previews, regardless of its value. Even `disable-preview="false"` disables previews. Omit or remove the attribute to enable them, following [Lit's Boolean attribute conversion](https://lit.dev/docs/components/properties/#using-the-default-converter).
+
+```html
+<!-- Previews enabled -->
+<ce-eclipse>Theme</ce-eclipse>
+
+<!-- Previews disabled -->
+<ce-eclipse disable-preview>Theme</ce-eclipse>
+```
+
+To toggle the attribute from JavaScript:
 
 ```js
 const eclipse = document.querySelector('ce-eclipse');
@@ -118,11 +182,13 @@ You can also set the `disablePreview` property to `true` or `false` from JavaScr
 <details>
 <summary>Why is the list unstyled? How can I style it?</summary>
 
-Eclipse is unopinionated. It features a native [customizable select element](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select) ([explainer](https://open-ui.org/components/customizable-select.explainer/)), which you can style according to your own conventions. For a CSS sample, see the demo.
+Eclipse is unopinionated. It features a native [customizable select element](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select) ([explainer](https://open-ui.org/components/customizable-select.explainer/)), which you can style according to your own conventions. Styling examples are planned for the hosted demo.
 </details>
 
 <details>
 <summary>Why Lit?</summary>
 
+Eclipse is one of several web components being developed with Lit. Using the same library across them reduces repeated code for rendering templates, connecting attributes to properties, and updating the DOM when preferences change.
 
+Lit builds on standard custom elements and shadow DOM, so the components can be used in ordinary HTML pages or alongside different application frameworks. Its declarative templates make the rendering and event handlers easier to read, and its update system changes the affected parts of the DOM while preserving the rest. All the components can share the same Lit dependency. See [What is Lit?](https://lit.dev/docs/).
 </details>

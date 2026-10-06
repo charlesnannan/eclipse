@@ -46,7 +46,7 @@ class Eclipse extends LitElement
     /** The selected theme, which a preview must restore when it ends. */
     private committedCssClass: string = '';
 
-    /** The theme class currently applied to the `<html>` element. */
+    /** The theme class currently applied to the document's `<html>` element. */
     private appliedCssClass: string = '';
 
     private activeDocument?: Document;

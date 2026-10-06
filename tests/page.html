@@ -40,6 +40,9 @@
             if (params.get('initial') === 'none') {
                 document.documentElement.className = 'foo bar';
             }
+            if (params.get('test') === 'ownership') {
+                import('./ownership.js');
+            }
         </script>
     </body>
 </html>

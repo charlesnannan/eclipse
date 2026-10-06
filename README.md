@@ -9,6 +9,24 @@ The component displays a native `select` element. When selecting a value, it app
 By default, hovering or focusing values also applies a temporary class name for quick previews.
 Leaving the picker or pressing Escape restores the last selected theme. Selecting a value keeps it applied.
 
+## Usage requirements
+
+Use only one connected `<ce-eclipse>` instance per document, including instances inside shadow roots. Connecting another instance throws an error before it can control the document's theme. The browser reports this lifecycle error; the extra element is still inserted into the DOM.
+
+Removing the active instance ends any preview and keeps the selected theme applied. You can then connect a replacement, or reconnect the original instance. A reconnected instance reads the document's current theme again.
+
+Apply the initial theme class to the document's `<html>` element before Eclipse's first render, even when it represents your default theme. For example:
+
+```html
+<html lang="en" class="dark">
+  <!-- Load Eclipse and place <ce-eclipse> in the body. -->
+</html>
+```
+
+For `naming="agnostic"`, use a class such as `theme-3` instead. If JavaScript determines the initial theme, apply its class before loading or inserting Eclipse. Classes added asynchronously after initialization are not detected.
+
+Eclipse does not apply a default theme automatically. If no recognized theme class is present, the picker displays its first option, and the document's classes stay unchanged until the user previews or selects a theme.
+
 # Installation
 
 TODO

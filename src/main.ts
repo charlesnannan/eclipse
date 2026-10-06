@@ -5,6 +5,9 @@ import {Naming} from "./types";
 @customElement('ce-eclipse')
 class Eclipse extends LitElement
 {
+    /** Each document can have one connected instance controlling its theme. */
+    private static instances = new WeakMap<Document, Eclipse>();
+
     static styles = css`
         select,
         select::picker(select) {
@@ -39,13 +42,42 @@ class Eclipse extends LitElement
     /** The theme class currently applied to the `<html>` element. */
     private appliedCssClass: string = '';
 
+    private activeDocument?: Document;
+
+    connectedCallback(): void
+    {
+        const document = this.ownerDocument;
+        const instance = Eclipse.instances.get(document);
+        if (instance && instance !== this) {
+            throw new Error('Only one <ce-eclipse> instance can be connected per document.');
+        }
+
+        Eclipse.instances.set(document, this);
+        this.activeDocument = document;
+        super.connectedCallback();
+
+        // Another instance may have changed the theme while this one was removed.
+        if (this.hasUpdated) {
+            this.synchronizeSelection();
+        }
+    }
+
     /**
-     * Preselect the theme based on the existing classes applied to the `<html>` element.
+     * The consumer must apply the initial theme class before the first render.
      */
     firstUpdated()
     {
-        const cssClasses = document.documentElement.classList.values();
+        if (this.activeDocument) {
+            this.synchronizeSelection();
+        }
+    }
+
+    private synchronizeSelection(): void
+    {
+        const cssClasses = this.ownerDocument.documentElement.classList.values();
         const slugs = this.themes.map((theme: string) => this.slugify(theme));
+        this.committedCssClass = '';
+        this.appliedCssClass = '';
         this.themeList.selectedIndex = 0;
 
         for (const cssClass of cssClasses) {
@@ -104,11 +136,13 @@ class Eclipse extends LitElement
 
     private applyCssClass(className: string): void
     {
-        if (this.appliedCssClass === className) {
+        // A previously rendered instance may be rejected when it reconnects.
+        if (!this.activeDocument || Eclipse.instances.get(this.activeDocument) !== this
+            || this.appliedCssClass === className) {
             return;
         }
 
-        const classList = document.documentElement.classList;
+        const classList = this.activeDocument.documentElement.classList;
         if (this.appliedCssClass) {
             classList.remove(this.appliedCssClass);
         }
@@ -144,8 +178,12 @@ class Eclipse extends LitElement
 
     disconnectedCallback(): void
     {
+        if (this.activeDocument) {
+            this.restoreCssClass();
+            Eclipse.instances.delete(this.activeDocument);
+            this.activeDocument = undefined;
+        }
         super.disconnectedCallback();
-        this.restoreCssClass();
     }
 
     private restoreOnFocusOut(event: FocusEvent): void

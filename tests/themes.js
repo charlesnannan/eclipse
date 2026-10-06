@@ -51,14 +51,50 @@ try {
     select.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
     assert(root.className === 'foo bar tokyo', 'Selection and preview cancellation retain the committed identifier.');
 
+    select.options[1].dispatchEvent(new FocusEvent('focus'));
     original.setAttribute('disable-preview', '');
     await original.updateComplete;
+    assert(root.classList.contains('tokyo') && !root.classList.contains('osaka'),
+        'Disabling preview through the attribute restores an active preview immediately.');
     select.options[1].dispatchEvent(new FocusEvent('focus'));
+    select.options[1].dispatchEvent(new MouseEvent('mouseover'));
     assert(root.classList.contains('tokyo') && !root.classList.contains('osaka'),
         'Disabled preview does not apply another identifier.');
     select.selectedIndex = 1;
     select.dispatchEvent(new Event('change'));
     assert(root.classList.contains('osaka'), 'Selection still works with preview disabled.');
+
+    original.removeAttribute('disable-preview');
+    await original.updateComplete;
+    select.options[0].dispatchEvent(new FocusEvent('focus'));
+    assert(root.classList.contains('tokyo'), 'Removing the attribute enables keyboard preview again.');
+    original.disablePreview = true;
+    await original.updateComplete;
+    assert(root.classList.contains('osaka') && !root.classList.contains('tokyo'),
+        'Disabling preview through the property also restores the selected theme.');
+    original.disablePreview = false;
+    await original.updateComplete;
+    select.options[0].dispatchEvent(new MouseEvent('mouseover'));
+    assert(root.classList.contains('tokyo'), 'Setting the property to false enables pointer preview again.');
+    select.dispatchEvent(new MouseEvent('mouseleave'));
+
+    // Include nested mutations as well as replacements of the public configuration.
+    original.themes[0].label = 'Changed label';
+    original.themes[0].className = 'changed-class';
+    original.themes.push({label: 'Extra', className: 'extra'});
+    original.themes = [{label: 'Replacement', className: 'replacement'}];
+    original.setAttribute('themes', '[{"label":"Attribute replacement","className":"attribute-replacement"}]');
+    original.disablePreview = true;
+    await original.updateComplete;
+    assert(select.options.length === 2 && select.options[0].textContent.trim() === '東京'
+        && select.options[0].value === 'tokyo' && select.options[1].value === 'osaka',
+        'Later theme changes cannot alter the initial options during a preference update.');
+    assert(select.value === 'osaka' && root.className === 'foo bar osaka',
+        'Preference updates preserve the selected theme after ignored configuration changes.');
+    original.remove();
+    document.body.append(original);
+    assert(select.value === 'osaka' && select.selectedIndex === 1,
+        'Reconnection continues to use the original theme configuration.');
     original.remove();
 
     const translated = document.createElement('ce-eclipse');

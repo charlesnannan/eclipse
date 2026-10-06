@@ -24,8 +24,10 @@ class Eclipse extends LitElement
      * and avoid the collisions caused by slugifying non-Latin labels.
      * We render options ourselves because slotted options would remain outside
      * the internal select's DOM tree and would not become native select options.
+     * The list is setup-time configuration: noAccessor keeps attribute parsing
+     * without scheduling updates when the public property is assigned.
      */
-    @property({type: Array})
+    @property({type: Array, noAccessor: true})
     themes: Theme[] = [
         {label: 'Darkest', className: 'darkest'},
         {label: 'Darker', className: 'darker'},
@@ -48,6 +50,9 @@ class Eclipse extends LitElement
     private appliedCssClass: string = '';
 
     private activeDocument?: Document;
+
+    /** Captured once so caller mutations cannot affect later preview updates. */
+    private configuredThemes: readonly Theme[] = [];
 
     connectedCallback(): void
     {
@@ -77,10 +82,18 @@ class Eclipse extends LitElement
         }
     }
 
-    protected willUpdate(changedProperties: PropertyValues): void
+    protected willUpdate(): void
     {
-        if (changedProperties.has('themes')) {
+        if (!this.hasUpdated) {
             this.validateThemes();
+            this.configuredThemes = this.themes.map(({label, className}) => ({label, className}));
+        }
+    }
+
+    protected updated(changedProperties: PropertyValues): void
+    {
+        if (changedProperties.has('disablePreview') && this.disablePreview) {
+            this.restoreCssClass();
         }
     }
 
@@ -109,7 +122,7 @@ class Eclipse extends LitElement
     private synchronizeSelection(): void
     {
         const cssClasses = this.ownerDocument.documentElement.classList.values();
-        const classNames = this.themes.map(theme => theme.className);
+        const classNames = this.configuredThemes.map(theme => theme.className);
         this.committedCssClass = '';
         this.appliedCssClass = '';
         this.themeList.selectedIndex = 0;
@@ -138,7 +151,7 @@ class Eclipse extends LitElement
                     <selectedcontent></selectedcontent>
                 </button>
 
-                ${this.themes.map((theme) =>
+                ${this.configuredThemes.map((theme) =>
                     html`<option
                         value=${theme.className}
                         @mouseover="${this.disablePreview ? null : this.previewCssClass}"

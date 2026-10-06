@@ -47,6 +47,8 @@ TODO: need to publish .d.ts typings in the npm package. (How?)
 
 The themes in display order. `label` is the text shown in the picker; `className` is the exact CSS class applied to `<html>`. You can translate labels or reorder themes while keeping the same class names.
 
+Configure the list before Eclipse's first render. Changes to `themes` after initialization do not alter the picker, even if you remove and reconnect it. Create a new instance to use a different list.
+
 Each class name must be unique, nonempty, and contain no whitespace. Eclipse reports an error for an invalid theme list.
 
 The default themes are:
@@ -73,10 +75,21 @@ For custom themes, use a JSON array in the attribute:
 
 ### `disable-preview`
 
-* Type: `boolean  `
+* Type: `boolean`
 * Default: `false`
 
 Prevents the component from updating the CSS class applied on the root element when themes are hovered or focused.
+
+You can toggle this preference at any time. Disabling preview immediately restores the selected theme if a preview is active; selecting a theme still works.
+
+The presence of the attribute disables preview. Remove it to enable preview again:
+
+```js
+const eclipse = document.querySelector('ce-eclipse');
+eclipse.toggleAttribute('disable-preview', disablePreviews);
+```
+
+You can also set the `disablePreview` property to `true` or `false` from JavaScript.
 
 ## FAQ
 

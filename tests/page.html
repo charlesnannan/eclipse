@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="foo theme-6 bar">
+<html lang="en" class="foo lightest bar">
     <head>
         <meta charset="utf-8" />
         <meta name="color-scheme" content="dark light" />
@@ -31,8 +31,12 @@
             const params = new URLSearchParams(location.search);
             const eclipse = document.querySelector('ce-eclipse');
 
-            if (params.get('naming') === 'agnostic') {
-                eclipse.setAttribute('naming', 'agnostic');
+            if (params.get('themes') === 'custom') {
+                eclipse.setAttribute('themes', JSON.stringify([
+                    {label: '東京', className: 'tokyo'},
+                    {label: '大阪', className: 'osaka'},
+                ]));
+                document.documentElement.className = 'foo osaka bar';
             }
             if (params.has('disable-preview')) {
                 eclipse.setAttribute('disable-preview', '');
@@ -42,6 +46,9 @@
             }
             if (params.get('test') === 'ownership') {
                 import('./ownership.js');
+            }
+            if (params.get('test') === 'themes') {
+                import('./themes.js');
             }
         </script>
     </body>

@@ -27,7 +27,7 @@ try {
     await original.updateComplete;
     const select = original.shadowRoot.querySelector('select');
     const root = document.documentElement;
-    assert(select.selectedIndex === 5 && root.className === 'foo theme-6 bar',
+    assert(select.selectedIndex === 5 && root.className === 'foo lightest bar',
         'The existing theme is selected without changing the root classes.');
 
     const duplicate = document.createElement('ce-eclipse');
@@ -46,7 +46,7 @@ try {
     select.options[2].dispatchEvent(new FocusEvent('focus'));
     assert(root.classList.contains('dark'), 'The active instance can preview a theme.');
     original.remove();
-    assert(root.classList.contains('theme-6') && !root.classList.contains('dark'),
+    assert(root.classList.contains('lightest') && !root.classList.contains('dark'),
         'Removing the active instance restores its committed theme.');
 
     document.body.append(duplicate);
@@ -55,7 +55,7 @@ try {
     assert(replacementSelect.selectedIndex === 5, 'A replacement can take ownership.');
     replacementSelect.selectedIndex = 2;
     replacementSelect.dispatchEvent(new Event('change'));
-    assert(root.classList.contains('dark') && !root.classList.contains('theme-6'),
+    assert(root.classList.contains('dark') && !root.classList.contains('lightest'),
         'The replacement can commit a theme.');
 
     document.body.append(original);
@@ -73,7 +73,7 @@ try {
     assert(select.selectedIndex === 3, 'Reconnecting synchronizes selection with the current theme.');
 
     const frame = document.createElement('iframe');
-    frame.src = './page.html?naming=agnostic';
+    frame.src = './page.html?themes=custom';
     const frameLoaded = new Promise(resolve => frame.addEventListener('load', resolve, {once: true}));
     document.body.append(frame);
     await frameLoaded;
@@ -84,8 +84,8 @@ try {
     const frameSelect = separate.shadowRoot.querySelector('select');
     frameSelect.selectedIndex = 0;
     frameSelect.dispatchEvent(new Event('change'));
-    assert(frameDocument.documentElement.classList.contains('theme-1')
-        && !frameDocument.documentElement.classList.contains('theme-6') && root.classList.contains('light'),
+    assert(frameDocument.documentElement.classList.contains('tokyo')
+        && !frameDocument.documentElement.classList.contains('osaka') && root.classList.contains('light'),
         'Separate documents have independent ownership and theme classes.');
     frame.remove();
 

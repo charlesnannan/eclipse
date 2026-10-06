@@ -23,7 +23,7 @@ Apply the initial theme class to the document's `<html>` element before Eclipse'
 </html>
 ```
 
-For `naming="agnostic"`, use a class such as `theme-3` instead. If JavaScript determines the initial theme, apply its class before loading or inserting Eclipse. Classes added asynchronously after initialization are not detected.
+The initial class must match a theme's `className`. If JavaScript determines the initial theme, apply its class before loading or inserting Eclipse. Classes added asynchronously after initialization are not detected.
 
 Eclipse does not apply a default theme automatically. If no recognized theme class is present, the picker displays its first option, and the document's classes stay unchanged until the user previews or selects a theme.
 
@@ -43,15 +43,32 @@ TODO: need to publish .d.ts typings in the npm package. (How?)
 
 ### `themes`
 
-* Type: `string[]`
-* Default: `["Darkest","Darker","Dark","Light","Lighter","Lightest"]`
+* Type: `Array<{label: string, className: string}>`
 
-The names displayed in the list.
+The themes in display order. `label` is the text shown in the picker; `className` is the exact CSS class applied to `<html>`. You can translate labels or reorder themes while keeping the same class names.
 
-Examples:
+Each class name must be unique, nonempty, and contain no whitespace. Eclipse reports an error for an invalid theme list.
+
+The default themes are:
+
+```json
+[
+  {"label": "Darkest", "className": "darkest"},
+  {"label": "Darker", "className": "darker"},
+  {"label": "Dark", "className": "dark"},
+  {"label": "Light", "className": "light"},
+  {"label": "Lighter", "className": "lighter"},
+  {"label": "Lightest", "className": "lightest"}
+]
+```
+
+For custom themes, use a JSON array in the attribute:
+
 ```html
-<ce-eclipse themes='["Black","Dark","Light","White"]'></ce-eclipse>
-<ce-eclipse themes='["Dawn","Dusk"]'></ce-eclipse>
+<ce-eclipse themes='[
+  {"label": "Polar Night", "className": "polar-night"},
+  {"label": "Dawn", "className": "dawn"}
+]'></ce-eclipse>
 ```
 
 ### `disable-preview`
@@ -60,15 +77,6 @@ Examples:
 * Default: `false`
 
 Prevents the component from updating the CSS class applied on the root element when themes are hovered or focused.
-
-### `naming`
-
-* Type: `"derived" | "agnostic"`
-* Default: `derived`
-
-By default, the CSS class applied on the root element is the slugified version of the theme. For example, `Polar Night` gets the `polar-night` derivative.
-
-If your application uses i18n for theme names, you may rather want a language-agnostic class name. With the attribute set to `agnostic`, the class is named `theme-[1,n]`, where `n` is the theme position in the list.
 
 ## FAQ
 

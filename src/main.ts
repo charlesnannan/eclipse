@@ -1,6 +1,7 @@
 import {css, html, LitElement} from 'lit';
 import {customElement, property, query} from 'lit/decorators.js';
-import {Naming} from "./types";
+import type {PropertyValues} from 'lit';
+import type {Theme} from './types';
 
 @customElement('ce-eclipse')
 class Eclipse extends LitElement
@@ -17,21 +18,25 @@ class Eclipse extends LitElement
         }
     `;
 
+    /**
+     * An ordered array makes display order explicit. Separate labels and class
+     * names allow translation and reordering without changing CSS identifiers,
+     * and avoid the collisions caused by slugifying non-Latin labels.
+     * We render options ourselves because slotted options would remain outside
+     * the internal select's DOM tree and would not become native select options.
+     */
     @property({type: Array})
-    themes: string[] = [
-        'Darkest',
-        'Darker',
-        'Dark',
-        'Light',
-        'Lighter',
-        'Lightest',
+    themes: Theme[] = [
+        {label: 'Darkest', className: 'darkest'},
+        {label: 'Darker', className: 'darker'},
+        {label: 'Dark', className: 'dark'},
+        {label: 'Light', className: 'light'},
+        {label: 'Lighter', className: 'lighter'},
+        {label: 'Lightest', className: 'lightest'},
     ];
 
     @property({type: Boolean, attribute: 'disable-preview'})
     disablePreview: boolean = false;
-
-    @property({type: String})
-    naming: Naming = Naming.Derived;
 
     @query('#theme-list', true)
     private themeList: HTMLSelectElement;
@@ -72,29 +77,48 @@ class Eclipse extends LitElement
         }
     }
 
+    protected willUpdate(changedProperties: PropertyValues): void
+    {
+        if (changedProperties.has('themes')) {
+            this.validateThemes();
+        }
+    }
+
+    private validateThemes(): void
+    {
+        if (!Array.isArray(this.themes)) {
+            throw new TypeError('The "themes" property must be an array of {label, className} objects.');
+        }
+
+        const classNames = new Set<string>();
+        for (const theme of this.themes) {
+            if (!theme || typeof theme.label !== 'string' || typeof theme.className !== 'string') {
+                throw new TypeError('Each theme must have string "label" and "className" fields.');
+            }
+            // DOMTokenList uses HTML whitespace to separate class tokens.
+            if (!theme.className || /[\t\n\f\r ]/.test(theme.className)) {
+                throw new TypeError('Each theme className must be nonempty and contain no HTML whitespace.');
+            }
+            if (classNames.has(theme.className)) {
+                throw new TypeError(`Duplicate theme className: "${theme.className}".`);
+            }
+            classNames.add(theme.className);
+        }
+    }
+
     private synchronizeSelection(): void
     {
         const cssClasses = this.ownerDocument.documentElement.classList.values();
-        const slugs = this.themes.map((theme: string) => this.slugify(theme));
+        const classNames = this.themes.map(theme => theme.className);
         this.committedCssClass = '';
         this.appliedCssClass = '';
         this.themeList.selectedIndex = 0;
 
         for (const cssClass of cssClasses) {
-            // Look for a theme-derived class name.
-            if (slugs.includes(cssClass)) {
+            if (classNames.includes(cssClass)) {
                 this.committedCssClass = cssClass;
                 this.appliedCssClass = cssClass;
-                this.themeList.selectedIndex = slugs.indexOf(cssClass);
-                break;
-            }
-            // Look for a language-agnostic class name.
-            const match = /^theme-([1-9]\d*)$/.exec(cssClass);
-            if (match && Number(match[1]) <= this.themes.length) {
-                const index = Number(match[1]);
-                this.committedCssClass = cssClass;
-                this.appliedCssClass = cssClass;
-                this.themeList.selectedIndex = index - 1; // Zero-based index.
+                this.themeList.selectedIndex = classNames.indexOf(cssClass);
                 break;
             }
         }
@@ -116,22 +140,15 @@ class Eclipse extends LitElement
 
                 ${this.themes.map((theme) =>
                     html`<option
-                        value=${this.slugify(theme)}
+                        value=${theme.className}
                         @mouseover="${this.disablePreview ? null : this.previewCssClass}"
                         @focus="${this.disablePreview ? null : this.previewCssClass}"
                     >
-                        ${theme}
+                        ${theme.label}
                     </option>`
                 )}
             </select>
         `;
-    }
-
-    private classNameForOption(option: HTMLOptionElement): string
-    {
-        return this.naming === Naming.Derived
-            ? option.value
-            : `theme-${option.index + 1}`;
     }
 
     private applyCssClass(className: string): void
@@ -161,14 +178,14 @@ class Eclipse extends LitElement
             return;
         }
 
-        this.committedCssClass = this.classNameForOption(option);
+        this.committedCssClass = option.value;
         this.applyCssClass(this.committedCssClass);
     }
 
     private previewCssClass(event: Event): void
     {
         const option = event.currentTarget as HTMLOptionElement;
-        this.applyCssClass(this.classNameForOption(option));
+        this.applyCssClass(option.value);
     }
 
     private restoreCssClass(): void
@@ -200,24 +217,6 @@ class Eclipse extends LitElement
         if (event.key === 'Escape') {
             this.restoreCssClass();
         }
-    }
-
-    /**
-     * Slugify a theme name so it can be applied to the document root as a CSS class.
-     */
-    private slugify(theme: string): string
-    {
-        return theme
-            // Decompose the character code points.
-            .normalize('NFD')
-            // Remove the diacritics with Unicode property escapes.
-            // Equivalent to the "Combining Diacritical Marks" block (/[\u0300-\u036f]/g).
-            .replace(/\p{Diacritic}/gu, '')
-            // Replace spaces and other non-alphanumeric characters with a hyphen.
-            .replace(/\W+/g, '-')
-            // Merge consecutive hyphens.
-            .replace(/--+/g, '-')
-            .toLowerCase();
     }
 }
 

@@ -49,6 +49,63 @@ You can also provide markup and style it with your own CSS:
 </ce-eclipse>
 ```
 
+## Styling
+
+Use your ordinary stylesheet, whether inline or loaded with `<link>`. Eclipse exposes [CSS parts](https://drafts.csswg.org/css-shadow-1/#part) so your rules can style its internal elements across the shadow DOM boundary:
+
+| Part | Element |
+| --- | --- |
+| `label` | The label containing your child content |
+| `select` | The theme picker |
+| `option` | Every theme option |
+
+Style the component itself to control its layout, and use `::part()` for its contents:
+
+```css
+ce-eclipse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+ce-eclipse::part(label) {
+  font-weight: bold;
+}
+
+ce-eclipse::part(select) {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+}
+
+ce-eclipse::part(option) {
+  padding: 0.5rem;
+}
+
+ce-eclipse::part(option):hover,
+ce-eclipse::part(option):focus {
+  background: Highlight;
+  color: HighlightText;
+}
+```
+
+The customizable select's dropdown, arrow, and selection checkmark can also be styled:
+
+```css
+ce-eclipse::part(select)::picker(select) {
+  border-radius: 0.25rem;
+}
+
+ce-eclipse::part(select)::picker-icon {
+  color: currentColor;
+}
+
+ce-eclipse::part(option)::checkmark {
+  color: currentColor;
+}
+```
+
+The element name before `::part()` is optional. A bare `::part(select)` targets any component in your stylesheet's scope that exposes a `select` part. Use `ce-eclipse::part(select)` to restrict the rule to Eclipse, or a class such as `.theme-picker::part(select)` to target a component with that class.
+
 ## Installation
 
 From a checkout of this repository, install the dependencies and build Eclipse:
@@ -184,7 +241,7 @@ You can also set the `disablePreview` property to `true` or `false` from JavaScr
 <details>
 <summary>Why is the list unstyled? How can I style it?</summary>
 
-Eclipse is unopinionated. It features a native [customizable select element](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select) ([explainer](https://open-ui.org/components/customizable-select.explainer/)), which you can style according to your own conventions. Styling examples are planned for the hosted demo.
+Eclipse is unopinionated. It features a native [customizable select element](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select) ([explainer](https://open-ui.org/components/customizable-select.explainer/)), which you can style according to your own conventions using the [exposed CSS parts](#styling).
 </details>
 
 <details>

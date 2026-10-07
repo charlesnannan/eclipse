@@ -157,9 +157,12 @@ class Eclipse extends LitElement
         // The label and select share a shadow tree so `for` can associate them.
         // A default slot lets the consumer supply the label's text and markup;
         // its rendered content also supplies the select's accessible name.
+        // Parts let consumer styles reach these elements across the shadow DOM
+        // boundary. Their names are a public API, independent of internal markup.
         return html`
-            <label for="theme-list"><slot></slot></label>
+            <label part="label" for="theme-list"><slot></slot></label>
             <select
+                part="select"
                 id="theme-list"
                 @change="${this.commitSelection}"
                 @mouseleave="${this.restoreCssClass}"
@@ -172,6 +175,7 @@ class Eclipse extends LitElement
 
                 ${this.configuredThemes.map((theme) =>
                     html`<option
+                        part="option"
                         value=${theme.className}
                         @mouseover="${this.disablePreview ? null : this.previewCssClass}"
                         @focus="${this.disablePreview ? null : this.previewCssClass}"

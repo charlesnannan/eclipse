@@ -11,15 +11,21 @@ function assert(condition, message)
 }
 
 const duplicateMessage = 'Only one <ce-eclipse> instance can be connected per document.';
+const conflictMessage = "Multiple configured theme classes are applied to the document's <html> element.";
 let duplicateErrors = 0;
-function captureDuplicate(event)
+let conflictErrors = 0;
+function captureExpectedError(event)
 {
     if (event.error?.message === duplicateMessage) {
         duplicateErrors++;
         event.preventDefault();
     }
+    if (event.error?.message === conflictMessage) {
+        conflictErrors++;
+        event.preventDefault();
+    }
 }
-window.addEventListener('error', captureDuplicate);
+window.addEventListener('error', captureExpectedError);
 
 try {
     await customElements.whenDefined('ce-eclipse');
@@ -98,10 +104,36 @@ try {
     select.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'}));
     assert(root.className === 'foo bar', 'Canceling a preview restores an initially unthemed document.');
 
+    original.remove();
+    root.className = 'foo dark light bar';
+    const conflicting = document.createElement('ce-eclipse');
+    document.body.append(conflicting);
+    let configurationError;
+    try {
+        await conflicting.updateComplete;
+    } catch (error) {
+        configurationError = error;
+    }
+    assert(configurationError instanceof TypeError && configurationError.message === conflictMessage,
+        'Multiple initial theme classes report a configuration error.');
+    assert(!conflicting.shadowRoot.querySelector('select') && root.className === 'foo dark light bar',
+        'Conflicting initial classes are preserved and no usable picker is rendered.');
+    conflicting.remove();
+
+    document.body.append(original);
+    assert(conflictErrors === 1, 'Reconnection also rejects multiple theme classes.');
+    select.options[0].dispatchEvent(new FocusEvent('focus'));
+    assert(root.className === 'foo dark light bar',
+        'A rejected reconnection cannot change the conflicting classes through its old picker.');
+    original.remove();
+    root.className = 'foo dark bar';
+    document.body.append(original);
+    assert(select.value === 'dark', 'Reconnection succeeds after the consumer resolves the conflicting classes.');
+
     results.textContent += '\nAll ownership checks passed.\n';
 } catch (error) {
     results.textContent += `FAIL: ${error.message}\n`;
     throw error;
 } finally {
-    window.removeEventListener('error', captureDuplicate);
+    window.removeEventListener('error', captureExpectedError);
 }

@@ -62,14 +62,16 @@ class Eclipse extends LitElement
             throw new Error('Only one <ce-eclipse> instance can be connected per document.');
         }
 
-        Eclipse.instances.set(document, this);
-        this.activeDocument = document;
-        super.connectedCallback();
-
         // Another instance may have changed the theme while this one was removed.
+        // Validate before taking ownership so an invalid reconnection cannot
+        // change the document through the instance's previously rendered picker.
         if (this.hasUpdated) {
             this.synchronizeSelection();
         }
+
+        Eclipse.instances.set(document, this);
+        this.activeDocument = document;
+        super.connectedCallback();
     }
 
     /**
@@ -87,6 +89,8 @@ class Eclipse extends LitElement
         if (!this.hasUpdated) {
             this.validateThemes();
             this.configuredThemes = this.themes.map(({label, className}) => ({label, className}));
+            // Reject conflicting initial classes before rendering a usable picker.
+            this.getInitialCssClass();
         }
     }
 
@@ -117,24 +121,35 @@ class Eclipse extends LitElement
             }
             classNames.add(theme.className);
         }
+
+        if (this.themes.length < 2) {
+            throw new TypeError('The "themes" property must contain at least two themes.');
+        }
+    }
+
+    private getInitialCssClass(): string
+    {
+        const classList = this.ownerDocument.documentElement.classList;
+        const matchingClasses = this.configuredThemes
+            .map(theme => theme.className)
+            .filter(className => classList.contains(className));
+
+        // Picking one would leave other theme classes active and make the result
+        // depend on CSS cascade order. The consumer must resolve this ambiguity.
+        if (matchingClasses.length > 1) {
+            throw new TypeError("Multiple configured theme classes are applied to the document's <html> element.");
+        }
+
+        return matchingClasses[0] ?? '';
     }
 
     private synchronizeSelection(): void
     {
-        const cssClasses = this.ownerDocument.documentElement.classList.values();
-        const classNames = this.configuredThemes.map(theme => theme.className);
-        this.committedCssClass = '';
-        this.appliedCssClass = '';
-        this.themeList.selectedIndex = 0;
-
-        for (const cssClass of cssClasses) {
-            if (classNames.includes(cssClass)) {
-                this.committedCssClass = cssClass;
-                this.appliedCssClass = cssClass;
-                this.themeList.selectedIndex = classNames.indexOf(cssClass);
-                break;
-            }
-        }
+        const className = this.getInitialCssClass();
+        this.committedCssClass = className;
+        this.appliedCssClass = className;
+        const index = this.configuredThemes.findIndex(theme => theme.className === className);
+        this.themeList.selectedIndex = index < 0 ? 0 : index;
     }
 
     render()

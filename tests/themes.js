@@ -125,6 +125,9 @@ try {
     unicode.remove();
 
     await expectInvalid({}, 'The "themes" property must be an array of {label, className} objects.');
+    const minimumMessage = 'The "themes" property must contain at least two themes.';
+    await expectInvalid([], minimumMessage);
+    await expectInvalid([{label: 'Dark', className: 'dark'}], minimumMessage);
     const fieldsMessage = 'Each theme must have string "label" and "className" fields.';
     await expectInvalid(['Dark'], fieldsMessage);
     await expectInvalid([null], fieldsMessage);

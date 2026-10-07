@@ -25,6 +25,8 @@ Apply the initial theme class to the document's `<html>` element before Eclipse'
 
 The initial class must match a theme's `className`. If JavaScript determines the initial theme, apply its class before loading or inserting Eclipse. Classes added asynchronously after initialization are not detected.
 
+Only one configured theme class may be present on the document's `<html>` element. Eclipse reports a configuration error if it finds more than one during initialization or reconnection, leaving those classes unchanged. Unrelated classes are allowed.
+
 Eclipse does not apply a default theme automatically. If no recognized theme class is present, the picker displays its first option, and the document's classes stay unchanged until the user previews or selects a theme.
 
 ## Label
@@ -123,7 +125,7 @@ The themes in display order. `label` is the text shown in the picker; `className
 
 Configure the list before Eclipse's first render. Changes to `themes` after initialization do not alter the picker, even if you remove and reconnect it. Create a new instance to use a different list.
 
-Each class name must be unique, nonempty, and contain no whitespace. Eclipse reports an error for an invalid theme list.
+Provide at least two themes. Each class name must be unique, nonempty, and contain no whitespace. Eclipse reports an error for an invalid theme list.
 
 The default themes are:
 

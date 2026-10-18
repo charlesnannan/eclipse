@@ -236,6 +236,17 @@ eclipse.toggleAttribute('disable-preview', disablePreviews);
 
 You can also set the `disablePreview` property to `true` or `false` from JavaScript.
 
+## Testing
+
+Install Playwright's browsers and run the suite:
+
+```sh
+npx playwright install chromium firefox webkit
+npm test
+```
+
+`npm test` builds Eclipse and tests it in Chromium, Firefox, and WebKit. The local server starts and stops automatically. See [the testing guide](tests/README.md) for coverage, conventions, native browser differences, and debugging commands.
+
 ## FAQ
 
 <details>

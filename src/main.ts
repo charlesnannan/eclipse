@@ -167,7 +167,7 @@ class Eclipse extends LitElement
                 @change="${this.commitSelection}"
                 @mouseleave="${this.restoreCssClass}"
                 @focusout="${this.restoreOnFocusOut}"
-                @keydown="${this.restoreOnEscape}"
+                @keydown="${this.handleKeyDown}"
             >
                 <button>
                     <selectedcontent></selectedcontent>
@@ -177,6 +177,7 @@ class Eclipse extends LitElement
                     html`<option
                         part="option"
                         value=${theme.className}
+                        @click="${this.commitOption}"
                         @mouseover="${this.disablePreview ? null : this.previewCssClass}"
                         @focus="${this.disablePreview ? null : this.previewCssClass}"
                     >
@@ -214,14 +215,27 @@ class Eclipse extends LitElement
             return;
         }
 
-        this.committedCssClass = option.value;
-        this.applyCssClass(this.committedCssClass);
+        this.commitCssClass(option.value);
     }
 
     private previewCssClass(event: Event): void
     {
         const option = event.currentTarget as HTMLOptionElement;
         this.applyCssClass(option.value);
+    }
+
+    private commitOption(event: Event): void
+    {
+        // An unthemed document still displays the first option. Activating that
+        // already-selected option does not fire `change`, but must apply a theme.
+        const option = event.currentTarget as HTMLOptionElement;
+        this.commitCssClass(option.value);
+    }
+
+    private commitCssClass(className: string): void
+    {
+        this.committedCssClass = className;
+        this.applyCssClass(this.committedCssClass);
     }
 
     private restoreCssClass(): void
@@ -248,10 +262,19 @@ class Eclipse extends LitElement
         this.restoreCssClass();
     }
 
-    private restoreOnEscape(event: KeyboardEvent): void
+    private handleKeyDown(event: KeyboardEvent): void
     {
         if (event.key === 'Escape') {
             this.restoreCssClass();
+        } else if ((event.key === 'Enter' || event.key === ' ') && this.themeList.matches(':open')) {
+            // Keyboard activation of an unchanged selection may fire neither
+            // `change` nor `click`. Keep native selection and popup behavior,
+            // while committing the option the user is activating.
+            const option = event.target instanceof HTMLOptionElement
+                ? event.target : this.themeList.selectedOptions[0];
+            if (option) {
+                this.commitCssClass(option.value);
+            }
         }
     }
 }

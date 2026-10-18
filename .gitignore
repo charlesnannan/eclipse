@@ -1,3 +1,7 @@
 .idea
 dist
 node_modules
+# Default directory created by the HTML reporter.
+playwright-report
+# Default directory for test artifacts created by all reporters.
+test-results

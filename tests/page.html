@@ -17,12 +17,18 @@
                 }
             }
         </script>
-        <script type="module" src="../dist/eclipse.js"></script>
+        <style>
+            /* Leave room for the native dropdown and targets for focus/leave tests. */
+            body { margin: 2rem; }
+            #after { display: block; margin-top: 15rem; }
+        </style>
     </head>
     <body>
+        <button id="before">Before the picker</button>
         <ce-eclipse>
             Default themes
         </ce-eclipse>
+        <button id="after">After the picker</button>
         <script>
             // Keep one component per page because each instance controls <html>.
             // Query parameters let this page serve several browser test scenarios.
@@ -42,11 +48,29 @@
             if (params.get('initial') === 'none') {
                 document.documentElement.className = 'foo bar';
             }
-            if (params.get('test') === 'ownership') {
-                import('./ownership.js');
+            // Playwright supplies setup before parsing, so attributes/properties
+            // are configured before Lit upgrades the element and snapshots them.
+            const setup = window.eclipseTestSetup;
+            if (setup) {
+                document.documentElement.className = setup.initialClasses;
+                if ('themes' in setup) eclipse.themes = setup.themes;
+                if ('themesAttribute' in setup) eclipse.setAttribute('themes', setup.themesAttribute);
+                if ('disablePreviewAttribute' in setup) {
+                    eclipse.setAttribute('disable-preview', setup.disablePreviewAttribute);
+                }
+                if ('label' in setup) eclipse.textContent = setup.label;
+                if ('labelMarkup' in setup) eclipse.innerHTML = setup.labelMarkup;
             }
-            if (params.get('test') === 'themes') {
-                import('./themes.js');
+        </script>
+        <script type="module">
+            await import('../dist/eclipse.js');
+            try {
+                await document.querySelector('ce-eclipse').updateComplete;
+                window.eclipseReady = {error: null};
+            } catch (error) {
+                // Invalid setup is an expected assertion target in configuration
+                // tests. All other browser errors are captured by the test fixture.
+                window.eclipseReady = {error: {name: error.name, message: error.message}};
             }
         </script>
     </body>

@@ -5,3 +5,5 @@ node_modules
 playwright-report
 # Default directory for test artifacts created by all reporters.
 test-results
+# Generated GitHub Pages site.
+/_site/

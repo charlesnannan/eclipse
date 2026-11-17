@@ -162,7 +162,7 @@ The build currently produces JavaScript only; TypeScript declaration files are n
 
 ## Demo
 
-A hosted example is planned for GitHub Pages. For now, use the [local playground](tests/page.html).
+The [demo](https://charlesnannan.github.io/eclipse/) shows Eclipse switching between three color palettes. The [Pages workflow](.github/workflows/pages.yml) builds and publishes it from the [demo source](demo/index.html). For testing locally, see the [browser test guide](tests/README.md).
 
 After building Eclipse, serve the repository with an HTTP server. For example, if Python is installed, run this from the repository's root:
 

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" class="daylight">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Eclipse theme picker demo</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --background: #f5efe4;
+            --surface: #fffaf2;
+            --text: #2c211b;
+            --accent: #874128;
+            --border: #ae9582;
+            background: var(--background);
+            color: var(--text);
+            font: 1rem/1.6 system-ui, sans-serif;
+        }
+
+        :root.twilight {
+            color-scheme: dark;
+            --background: #25263e;
+            --surface: #323350;
+            --text: #f3ecff;
+            --accent: #e1bfff;
+            --border: #9a8db5;
+        }
+
+        :root.midnight {
+            color-scheme: dark;
+            --background: #121c1b;
+            --surface: #1c2c29;
+            --text: #edf6f0;
+            --accent: #a8dfbc;
+            --border: #78988d;
+        }
+
+        main {
+            max-inline-size: 38rem;
+            margin: clamp(2rem, 10vh, 6rem) auto;
+            padding: 0 1rem;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2.75rem, 9vw, 4.75rem);
+            line-height: 1.1;
+            letter-spacing: -0.045em;
+        }
+
+        .demo {
+            margin-block: 2rem 1rem;
+            padding: clamp(1rem, 5vw, 2rem);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            background: var(--surface);
+        }
+
+        .demo p { margin-block-end: 0; }
+
+        ce-eclipse {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        ce-eclipse::part(label) { font-weight: 650; }
+
+        ce-eclipse::part(select) {
+            min-inline-size: 9rem;
+            padding: 0.4rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: 0.35rem;
+            background: var(--background);
+            color: inherit;
+            font: inherit;
+        }
+
+        a { color: var(--accent); }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "lit": "./vendor/lit/index.js",
+                "lit/decorators.js": "./vendor/lit/decorators.js",
+                "lit-element/": "./vendor/lit-element/",
+                "lit-html": "./vendor/lit-html/lit-html.js",
+                "lit-html/": "./vendor/lit-html/",
+                "@lit/reactive-element": "./vendor/@lit/reactive-element/reactive-element.js",
+                "@lit/reactive-element/": "./vendor/@lit/reactive-element/"
+            }
+        }
+    </script>
+    <script type="module" src="./dist/eclipse.js"></script>
+</head>
+<body>
+    <main>
+        <h1>Eclipse</h1>
+        <p>A custom element that lets visitors choose a color theme for the page.</p>
+
+        <div class="demo">
+            <ce-eclipse themes='[
+                {"label": "Daylight", "className": "daylight"},
+                {"label": "Twilight", "className": "twilight"},
+                {"label": "Midnight", "className": "midnight"}
+            ]'>Theme</ce-eclipse>
+            <p>Choose a theme to apply it to this page. In browsers that support option previews, hover over an option to try it before selecting it.</p>
+        </div>
+
+        <a href="https://github.com/charlesnannan/eclipse">View the source on GitHub</a>
+    </main>
+</body>
+</html>

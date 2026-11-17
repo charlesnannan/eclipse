@@ -1,0 +1,52 @@
+name: Deploy Eclipse demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - run: npm ci
+      - run: npm run build
+
+      - name: Assemble the demo site
+        run: |
+          mkdir -p _site/dist _site/vendor/@lit
+          cp -R demo/. _site/
+          cp LICENSE _site/
+          cp dist/eclipse.js _site/dist/
+          cp -R node_modules/lit node_modules/lit-element node_modules/lit-html _site/vendor/
+          cp -R node_modules/@lit/reactive-element _site/vendor/@lit/
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
